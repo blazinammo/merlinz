@@ -28,16 +28,6 @@ let movementDirection = null;
 
 const worldWidth = 10000;
 const worldHeight = 10000;
-const worldName = window.location.pathname.substring(1);
-
-// Function to generate a random fantasy world name (this can be customized)
-function generateFantasyWorldName() {
-    const adjectives = ['Mystic', 'Enchanted', 'Lost', 'Forgotten', 'Ancient', 'Hidden', 'Shattered', 'Twilight'];
-    const nouns = ['Forest', 'Island', 'Realm', 'Kingdom', 'Empire', 'Cavern', 'Valley', 'Tundra'];
-    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const noun = nouns[Math.floor(Math.random() * nouns.length)];
-    return `${adj} ${noun}`;
-}
 
 // Extract world name from the URL and sanitize it
 const urlPath = window.location.pathname;  // Get the full path of the URL

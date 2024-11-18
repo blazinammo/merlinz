@@ -25,160 +25,11 @@
 
 
 
-// Function to generate a random fantasy world name (this can be customized)
-function generateFantasyWorldName() {
-    const adjectives = ['Mystic', 'Enchanted', 'Lost', 'Forgotten', 'Ancient', 'Hidden', 'Shattered', 'Twilight'];
-    const nouns = ['Forest', 'Island', 'Realm', 'Kingdom', 'Empire', 'Cavern', 'Valley', 'Tundra'];
-    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const noun = nouns[Math.floor(Math.random() * nouns.length)];
-    return `${adj} ${noun}`;
-}
-
-// Extract world name from the URL and sanitize it
-const urlPath = window.location.pathname;  // Get the full path of the URL
-const worldName = urlPath.split('/').filter(part => part.length > 0).pop();  // Get the last part of the URL
-
-console.log("World Name: ", worldName);  // Debug log
-if (!worldName) {
-    console.error("World name is not specified in the URL.");
-    alert("World name is not specified in the URL.");
-
-    // Automatically redirect to a valid world
-    const validWorlds = ['mystic_forest', 'enchanted_realm', 'forgotten_island']; // List of valid world names
-    const randomValidWorld = validWorlds[Math.floor(Math.random() * validWorlds.length)];
-
-        // Redirect to the valid world URL
-    window.location.href = `/${randomValidWorld}`;
-} else {
-    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';  // Choose protocol based on the URL
-    const socket = new WebSocket(`${protocol}${window.location.host}/ws/${worldName}`);  // Updated WebSocket URL path
-    console.log("Joining world: ", worldName);
-}
-
- const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-const socket = new WebSocket('wss://' + window.location.host + '/' + worldName);  // Include world name in WebSocket URL
-console.log("Joining world: ", worldName);
-
-const worldWidth = 20000;
-const worldHeight = 20000;
-
-
 let players = {};
-let environment = [];
 let playerId = null;
-
-const images = {
-    'wizard1.png': new Image(),
-    'wizard2.png': new Image(),
-    'wizard3.png': new Image(),
-    'wizard4.png': new Image(),
-    'wizard5.png': new Image(),
-    'wizard6.png': new Image(),
-    'tree1.png': new Image(),
-    'tree2.png': new Image(),
-    'tree3.png': new Image(),
-    'tree4.png': new Image(),
-    'tree5.png': new Image(),
-    'rock.png': new Image(),
-    'sand.png': new Image(),
-    'grass.png': new Image(),
-    'leaves.png': new Image(),
-    'barren.png': new Image(),
-	'black_rectangle.png': new Image()  
-};
-
-for (const [key, img] of Object.entries(images)) {
-    img.src = key;
-}
-
-// Image loading verification
-let imagesLoaded = 0;
-const totalImages = Object.keys(images).length;
-
-for (const [key, img] of Object.entries(images)) {
-    img.onload = () => {
-        imagesLoaded++;
-        if (imagesLoaded === totalImages) {
-            // Once all images are loaded, start the game loop
-            console.log("All images are loaded, starting the game.");
-            draw();  // Call the draw function to render the game once images are loaded
-        }
-    };
-    img.src = key;  // Ensure images are loaded from the correct source
-}
-
 let movementDirection = null;
-let frameCounter = 0;
 
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-const viewportWidth = canvas.width;
-const viewportHeight = canvas.height;
-
-// Zoom and Pan Variables
-let scale = 1.0;
-const zoomStep = 0.1;
-let panOffsetX = 0;
-let panOffsetY = 0;
-
-let isPanning = false;
-let startX = 0;
-let startY = 0;
-
-// Event listener for zoom (mouse wheel or +/- keys)
-window.addEventListener('wheel', (event) => {
-    if (event.deltaY < 0) {
-        scale = Math.min(scale + zoomStep, 2.0);
-    } else {
-        scale = Math.max(scale - zoomStep, 0.2);
-    }
-    draw();
-});
-
-window.addEventListener('keydown', function(event) {
-    if (event.key === '+') {
-        scale = Math.min(scale + zoomStep, 2.0);
-        draw();
-    } else if (event.key === '-') {
-        scale = Math.max(scale - zoomStep, 0.2);
-        draw();
-    }
-});
-
-// Mouse drag event listeners for panning
-canvas.addEventListener('mousedown', (event) => {
-    isPanning = true;
-    startX = event.clientX;
-    startY = event.clientY;
-});
-
-canvas.addEventListener('mousemove', (event) => {
-    if (isPanning) {
-        const dx = (event.clientX - startX) / scale;  // Adjust for scale
-        const dy = (event.clientY - startY) / scale;
-        panOffsetX -= dx;
-        panOffsetY -= dy;
-        startX = event.clientX;
-        startY = event.clientY;
-        draw();
-    }
-});
-
-canvas.addEventListener('mouseup', () => {
-    isPanning = false;
-});
-
-canvas.addEventListener('mouseleave', () => {
-    isPanning = false;
-});
+const socket = new WebSocket(`wss://${window.location.host}/ws/${worldName}`);
 
 socket.onopen = function() {
     console.log('Connected to server');
@@ -190,113 +41,27 @@ socket.onopen = function() {
     socket.send(JSON.stringify(initData));
 };
 
-let lastEnvironment = [];  // Store the last environment received
-
 socket.onmessage = function(event) {
     const data = JSON.parse(event.data);
 
     if (data.type === 'init_ack') {
         playerId = data.id;
-        const worldSeed = data.seed;  // The seed comes in the init_ack message
-        document.getElementById('worldSeed').textContent = 'Seed: ' + worldSeed;  // Display seed in the UI
+        document.getElementById('worldSeed').textContent = 'Seed: ' + data.seed;
+        players = data.players;
     }
 
     if (data.type === 'update') {
-        players = data.players;
-        
-        if (data.environment && data.environment.objects) {
-    environment = data.environment.objects;  // Only update the objects
-}
-
-        draw();  // Redraw the game with updated data
+        Object.keys(data.players).forEach((id) => {
+            if (data.players[id]) {
+                players[id] = data.players[id];
+            }
+        });
+        draw();
     }
 };
 
-
-// Helper function to compare arrays of objects (simplified comparison)
-function arraysAreEqual(arr1, arr2) {
-    if (arr1.length !== arr2.length) return false;
-    for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i].x !== arr2[i].x || arr1[i].y !== arr2[i].y || arr1[i].img !== arr2[i].img) {
-            return false;
-        }
-    }
-    return true;
-}
-
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (!playerId || !players[playerId]) return;
-
-    ctx.save();
-    ctx.scale(scale, scale);
-
-    const player = players[playerId];
-    const viewportX = player.x - viewportWidth / (2 * scale) + panOffsetX;
-    const viewportY = player.y - viewportHeight / (2 * scale) + panOffsetY;
-
-     // Ensure environment is an array before iterating
-    if (Array.isArray(environment)) {
-        console.log("Rendering environment objects:", environment);  // Debug log
-        environment.forEach(obj => {
-            let objectSize = 100 * scale;  // Default size for most objects
-
-            if (obj.type === 'tree') {
-                objectSize = obj.size * scale;  // Use the tree size passed from the server
-            }
-
-            if (obj.type === 'black_rectangle') {
-                ctx.drawImage(images['black_rectangle.png'], (obj.x - viewportX) * scale, (obj.y - viewportY) * scale, obj.width * scale, obj.height * scale);
-            } else {
-                ctx.drawImage(images[obj.img], (obj.x - viewportX) * scale, (obj.y - viewportY) * scale, objectSize, objectSize);
-            }
-        });
-    }
-
-    // Draw all players
-    Object.keys(players).forEach(id => {
-        const otherPlayer = players[id];
-        let sprite = images['wizard1.png'];
-
-        if (id === playerId) return;
-
-        if (otherPlayer.movementDirection === 'left') {
-            sprite = (frameCounter % 2 === 0) ? images['wizard1.png'] : images['wizard2.png'];
-        } else if (otherPlayer.movementDirection === 'right') {
-            sprite = (frameCounter % 2 === 0) ? images['wizard3.png'] : images['wizard4.png'];
-        } else if (otherPlayer.movementDirection === 'up') {
-            sprite = images['wizard5.png'];
-        } else if (otherPlayer.movementDirection === 'down') {
-            sprite = images['wizard6.png'];
-        }
-
-        const objectSize = 100 * scale;
-        ctx.drawImage(sprite, (otherPlayer.x - viewportX) * scale - objectSize / 2, (otherPlayer.y - viewportY) * scale - objectSize / 2, objectSize, objectSize);
-    });
-
-    // Draw the local player
-    let sprite = images['wizard1.png'];
-    if (movementDirection === 'left') {
-        sprite = (frameCounter % 2 === 0) ? images['wizard1.png'] : images['wizard2.png'];
-    } else if (movementDirection === 'right') {
-        sprite = (frameCounter % 2 === 0) ? images['wizard3.png'] : images['wizard4.png'];
-    } else if (movementDirection === 'up') {
-        sprite = images['wizard5.png'];
-    } else if (movementDirection === 'down') {
-        sprite = images['wizard6.png'];
-    }
-
-    const imageSize = 100 * scale;
-    ctx.drawImage(sprite, (player.x - viewportX) * scale - imageSize / 2, (player.y - viewportY) * scale - imageSize / 2, imageSize, imageSize);
-
-    ctx.restore();
-    frameCounter++;
-}
-
-// Movement handling
 function handleMovement() {
-    if (!playerId || !players[playerId]) return;  // Check if player exists
+    if (!playerId || !players[playerId]) return;
 
     let dx = 0;
     let dy = 0;
@@ -320,25 +85,31 @@ function handleMovement() {
     }
 }
 
-// Key event listeners for player movement
-window.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowLeft') {
-        movementDirection = 'left';
-    } else if (event.key === 'ArrowRight') {
-        movementDirection = 'right';
-    } else if (event.key === 'ArrowUp') {
-        movementDirection = 'up';
-    } else if (event.key === 'ArrowDown') {
-        movementDirection = 'down';
-    }
-});
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!playerId || !players[playerId]) return;
 
-window.addEventListener('keyup', () => {
-    movementDirection = null;
-});
+    Object.keys(players).forEach(id => {
+        const player = players[id];
+        let sprite = images['wizard1.png'];
 
-setInterval(handleMovement, 1000 / 60);  // Update movement at 60 FPS
+        if (player.movementDirection === 'left') {
+            sprite = (frameCounter % 2 === 0) ? images['wizard1.png'] : images['wizard2.png'];
+        } else if (player.movementDirection === 'right') {
+            sprite = (frameCounter % 2 === 0) ? images['wizard3.png'] : images['wizard4.png'];
+        } else if (player.movementDirection === 'up') {
+            sprite = images['wizard5.png'];
+        } else if (player.movementDirection === 'down') {
+            sprite = images['wizard6.png'];
+        }
 
+        const objectSize = 100 * scale;
+        const offsetX = (player.x - viewportX) * scale - objectSize / 2;
+        const offsetY = (player.y - viewportY) * scale - objectSize / 2;
+
+        ctx.drawImage(sprite, offsetX, offsetY, objectSize, objectSize);
+    });
+}
 
 
 </script>

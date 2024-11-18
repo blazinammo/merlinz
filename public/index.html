@@ -29,6 +29,8 @@ let players = {};
 let playerId = null;
 let movementDirection = null;
 
+const worldWidth = 10000;
+const worldHeight = 10000;
 const worldName = window.location.pathname.substring(1);
 const socket = new WebSocket(`wss://${window.location.host}/ws/${worldName}`);
 

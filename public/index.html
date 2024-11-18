@@ -22,36 +22,6 @@
 
 <canvas id="gameCanvas"></canvas>
 <script>
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiplayer Adventure Game</title>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            height: 100%;
-        }
-        canvas {
-            display: block;
-            margin: 0 auto;
-            background: #eee;
-        }
-    </style>
-</head>
-<body>
-
-<canvas id="gameCanvas"></canvas>
-<script>
-
-
-
 let players = {};
 let playerId = null;
 let movementDirection = null;
@@ -82,7 +52,7 @@ if (!worldName) {
     const validWorlds = ['mystic_forest', 'enchanted_realm', 'forgotten_island']; // List of valid world names
     const randomValidWorld = validWorlds[Math.floor(Math.random() * validWorlds.length)];
 
-        // Redirect to the valid world URL
+    // Redirect to the valid world URL
     window.location.href = `/${randomValidWorld}`;
 } else {
     const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';  // Choose protocol based on the URL
@@ -90,12 +60,8 @@ if (!worldName) {
     console.log("Joining world: ", worldName);
 }
 
- const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-
-const socket = new WebSocket('ws://' + window.location.host + '/' + worldName);  // Include world name in WebSocket URL
-console.log("Joining world: ", worldName);
-
 
 socket.onopen = function() {
     console.log('Connected to server');
@@ -176,21 +142,11 @@ function draw() {
         ctx.drawImage(sprite, offsetX, offsetY, objectSize, objectSize);
     });
 }
-
-
 </script>
+
 <div id="worldSeed" style="position: absolute; top: 10px; left: 10px; color: white; font-size: 18px;">
     Seed: Loading...
 </div>
-</body>
-</html>
 
-
-
-
-</script>
-<div id="worldSeed" style="position: absolute; top: 10px; left: 10px; color: white; font-size: 18px;">
-    Seed: Loading...
-</div>
 </body>
 </html>

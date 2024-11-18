@@ -47,10 +47,11 @@ if (!worldName) {
     const validWorlds = ['mystic_forest', 'enchanted_realm', 'forgotten_island']; // List of valid world names
     const randomValidWorld = validWorlds[Math.floor(Math.random() * validWorlds.length)];
 
-    // Redirect to the valid world URL
+        // Redirect to the valid world URL
     window.location.href = `/${randomValidWorld}`;
 } else {
-const socket = new WebSocket('wss://merlinz.onrender.com/ws/' + worldName);
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';  // Choose protocol based on the URL
+    const socket = new WebSocket(`${protocol}${window.location.host}/ws/${worldName}`);  // Updated WebSocket URL path
     console.log("Joining world: ", worldName);
 }
 

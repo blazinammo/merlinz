@@ -25,6 +25,33 @@
 
 
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Adventure Game</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: #eee;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+<script>
+
+
+
 let players = {};
 let playerId = null;
 let movementDirection = null;
@@ -32,7 +59,43 @@ let movementDirection = null;
 const worldWidth = 10000;
 const worldHeight = 10000;
 const worldName = window.location.pathname.substring(1);
-const socket = new WebSocket(`wss://${window.location.host}/ws/${worldName}`);
+
+// Function to generate a random fantasy world name (this can be customized)
+function generateFantasyWorldName() {
+    const adjectives = ['Mystic', 'Enchanted', 'Lost', 'Forgotten', 'Ancient', 'Hidden', 'Shattered', 'Twilight'];
+    const nouns = ['Forest', 'Island', 'Realm', 'Kingdom', 'Empire', 'Cavern', 'Valley', 'Tundra'];
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    return `${adj} ${noun}`;
+}
+
+// Extract world name from the URL and sanitize it
+const urlPath = window.location.pathname;  // Get the full path of the URL
+const worldName = urlPath.split('/').filter(part => part.length > 0).pop();  // Get the last part of the URL
+
+console.log("World Name: ", worldName);  // Debug log
+if (!worldName) {
+    console.error("World name is not specified in the URL.");
+    alert("World name is not specified in the URL.");
+
+    // Automatically redirect to a valid world
+    const validWorlds = ['mystic_forest', 'enchanted_realm', 'forgotten_island']; // List of valid world names
+    const randomValidWorld = validWorlds[Math.floor(Math.random() * validWorlds.length)];
+
+        // Redirect to the valid world URL
+    window.location.href = `/${randomValidWorld}`;
+} else {
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';  // Choose protocol based on the URL
+    const socket = new WebSocket(`${protocol}${window.location.host}/ws/${worldName}`);  // Updated WebSocket URL path
+    console.log("Joining world: ", worldName);
+}
+
+ const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const socket = new WebSocket('ws://' + window.location.host + '/' + worldName);  // Include world name in WebSocket URL
+console.log("Joining world: ", worldName);
+
 
 socket.onopen = function() {
     console.log('Connected to server');
@@ -113,6 +176,16 @@ function draw() {
         ctx.drawImage(sprite, offsetX, offsetY, objectSize, objectSize);
     });
 }
+
+
+</script>
+<div id="worldSeed" style="position: absolute; top: 10px; left: 10px; color: white; font-size: 18px;">
+    Seed: Loading...
+</div>
+</body>
+</html>
+
+
 
 
 </script>

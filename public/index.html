@@ -28,6 +28,7 @@ let movementDirection = null;
 
 const worldWidth = 10000;
 const worldHeight = 10000;
+let socket = null;  // Declare socket outside the if block
 
 // Extract world name from the URL and sanitize it
 const urlPath = window.location.pathname;  // Get the full path of the URL
@@ -46,7 +47,7 @@ if (!worldName) {
     window.location.href = `/${randomValidWorld}`;
 } else {
     const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';  // Choose protocol based on the URL
-    const socket = new WebSocket(`${protocol}${window.location.host}/ws/${worldName}`);  // Updated WebSocket URL path
+    socket = new WebSocket(`${protocol}${window.location.host}/ws/${worldName}`);  // Updated WebSocket URL path
     console.log("Joining world: ", worldName);
 }
 
@@ -132,6 +133,7 @@ function draw() {
         ctx.drawImage(sprite, offsetX, offsetY, objectSize, objectSize);
     });
 }
+
 </script>
 
 <div id="worldSeed" style="position: absolute; top: 10px; left: 10px; color: white; font-size: 18px;">

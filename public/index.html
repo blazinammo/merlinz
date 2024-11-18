@@ -50,14 +50,14 @@ if (!worldName) {
     // Redirect to the valid world URL
     window.location.href = `/${randomValidWorld}`;
 } else {
-    const socket = new WebSocket('wss://merlinz.onrender.com' + window.location.host + '/ws/' + worldName);  // Updated WebSocket URL path
+const socket = new WebSocket('wss://merlinz.onrender.com/ws/' + worldName);
     console.log("Joining world: ", worldName);
 }
 
  const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const socket = new WebSocket('wss://merlinz.onrender.com' + window.location.host + '/' + worldName);  // Include world name in WebSocket URL
+const socket = new WebSocket('wss://merlinz.onrender.com/ws/' + worldName);
 console.log("Joining world: ", worldName);
 
 const worldWidth = 20000;

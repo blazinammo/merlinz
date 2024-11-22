@@ -1,144 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiplayer Adventure Game</title>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            height: 100%;
-        }
-        canvas {
-            display: block;
-            margin: 0 auto;
-            background: #eee;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wizard Game</title>
+   <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* Disable scrolling */
+      height: 100%;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .player {
+      position: absolute;
+    }
+  </style>
 </head>
 <body>
-
-<canvas id="gameCanvas"></canvas>
-<script>
-let players = {};
-let playerId = null;
-let movementDirection = null;
-
-const worldWidth = 10000;
-const worldHeight = 10000;
-let socket = null;  // Declare socket outside the if block
-
-// Extract world name from the URL and sanitize it
-const urlPath = window.location.pathname;  // Get the full path of the URL
-const worldName = urlPath.split('/').filter(part => part.length > 0).pop();  // Get the last part of the URL
-
-console.log("World Name: ", worldName);  // Debug log
-if (!worldName) {
-    console.error("World name is not specified in the URL.");
-    alert("World name is not specified in the URL.");
-
-    // Automatically redirect to a valid world
-    const validWorlds = ['mystic_forest', 'enchanted_realm', 'forgotten_island']; // List of valid world names
-    const randomValidWorld = validWorlds[Math.floor(Math.random() * validWorlds.length)];
-
-    // Redirect to the valid world URL
-    window.location.href = `/${randomValidWorld}`;
-} else {
-    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';  // Choose protocol based on the URL
-    socket = new WebSocket(`${protocol}${window.location.host}/ws/${worldName}`);  // Updated WebSocket URL path
-    console.log("Joining world: ", worldName);
-}
-
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-socket.onopen = function() {
-    console.log('Connected to server');
-    const initData = {
-        type: 'init',
-        x: Math.random() * worldWidth,
-        y: Math.random() * worldHeight
-    };
-    socket.send(JSON.stringify(initData));
-};
-
-socket.onmessage = function(event) {
-    const data = JSON.parse(event.data);
-
-    if (data.type === 'init_ack') {
-        playerId = data.id;
-        document.getElementById('worldSeed').textContent = 'Seed: ' + data.seed;
-        players = data.players;
-    }
-
-    if (data.type === 'update') {
-        Object.keys(data.players).forEach((id) => {
-            if (data.players[id]) {
-                players[id] = data.players[id];
-            }
-        });
-        draw();
-    }
-};
-
-function handleMovement() {
-    if (!playerId || !players[playerId]) return;
-
-    let dx = 0;
-    let dy = 0;
-
-    if (movementDirection === 'left') {
-        dx = -5;
-    } else if (movementDirection === 'right') {
-        dx = 5;
-    } else if (movementDirection === 'up') {
-        dy = -5;
-    } else if (movementDirection === 'down') {
-        dy = 5;
-    }
-
-    const player = players[playerId];
-    const newX = Math.min(Math.max(player.x + dx, 0), worldWidth);
-    const newY = Math.min(Math.max(player.y + dy, 0), worldHeight);
-
-    if (newX !== player.x || newY !== player.y) {
-        socket.send(JSON.stringify({ type: 'move', x: newX, y: newY, direction: movementDirection }));
-    }
-}
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (!playerId || !players[playerId]) return;
-
-    Object.keys(players).forEach(id => {
-        const player = players[id];
-        let sprite = images['wizard1.png'];
-
-        if (player.movementDirection === 'left') {
-            sprite = (frameCounter % 2 === 0) ? images['wizard1.png'] : images['wizard2.png'];
-        } else if (player.movementDirection === 'right') {
-            sprite = (frameCounter % 2 === 0) ? images['wizard3.png'] : images['wizard4.png'];
-        } else if (player.movementDirection === 'up') {
-            sprite = images['wizard5.png'];
-        } else if (player.movementDirection === 'down') {
-            sprite = images['wizard6.png'];
-        }
-
-        const objectSize = 100 * scale;
-        const offsetX = (player.x - viewportX) * scale - objectSize / 2;
-        const offsetY = (player.y - viewportY) * scale - objectSize / 2;
-
-        ctx.drawImage(sprite, offsetX, offsetY, objectSize, objectSize);
-    });
-}
-
-</script>
-
-<div id="worldSeed" style="position: absolute; top: 10px; left: 10px; color: white; font-size: 18px;">
-    Seed: Loading...
-</div>
-
+  <canvas id="gameCanvas"></canvas>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
 </body>
 </html>

@@ -76,25 +76,26 @@ function updatePosition() {
     // Update player position
     players[playerId] = { x: newX, y: newY };
     socket.emit('move', { x: newX, y: newY });
-
   }
 }
 
-let lastSentX = players[playerId].x;
-let lastSentY = players[playerId].y;
+let lastSentX = null;
+let lastSentY = null;
 
 function sendViewportUpdate() {
   const player = players[playerId];
-  // Only send update if the player moved
-  if (Math.abs(player.x - lastSentX) > 5 || Math.abs(player.y - lastSentY) > 5) {
-    socket.emit('updateViewport', {
-      x: player.x,
-      y: player.y,
-      width: canvas.width,
-      height: canvas.height
-    });
-    lastSentX = player.x;
-    lastSentY = player.y;
+  if (player && lastSentX !== null && lastSentY !== null) {
+    // Only send update if the player moved
+    if (Math.abs(player.x - lastSentX) > 5 || Math.abs(player.y - lastSentY) > 5) {
+      socket.emit('updateViewport', {
+        x: player.x,
+        y: player.y,
+        width: canvas.width,
+        height: canvas.height
+      });
+      lastSentX = player.x;
+      lastSentY = player.y;
+    }
   }
 }
 
@@ -110,17 +111,17 @@ function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Apply zoom transformation
-  ctx.translate(offsetX * zoomLevel, offsetY * zoomLevel);
+  ctx.scale(zoomLevel, zoomLevel);
 
   // Only proceed if playerId and players[playerId] are defined
   if (playerId && players[playerId]) {
     // Calculate the offset based on the player's position to center them
     const player = players[playerId];
-    const offsetX = canvas.width / 2 - player.x;
-    const offsetY = canvas.height / 2 - player.y;
+    const playerOffsetX = canvas.width / 2 - player.x;
+    const playerOffsetY = canvas.height / 2 - player.y;
 
     // Move the context to follow the player
-    ctx.translate(offsetX, offsetY);
+    ctx.translate(playerOffsetX, playerOffsetY);
   }
 
   // Draw environment objects (only the visible ones received from the server)
@@ -154,6 +155,10 @@ socket.on('init', (serverPlayers) => {
   playerId = socket.id;
   players[playerId] = { x: canvas.width / 2, y: canvas.height / 2 };
   Object.assign(players, serverPlayers);
+  
+  // Initialize the last sent coordinates after player initialization
+  lastSentX = players[playerId].x;
+  lastSentY = players[playerId].y;
 });
 
 // Handle new player joining

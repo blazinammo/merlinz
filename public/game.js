@@ -93,6 +93,12 @@ function sendViewportUpdate() {
   }
 }
 
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  sendViewportUpdate();
+});
+
 // Update every 100ms to ensure smooth updates as the player moves
 setInterval(sendViewportUpdate, 100);
 
@@ -173,3 +179,5 @@ socket.on('environment', (data) => {
 
 // Update player position
 setInterval(updatePosition, 4); // Roughly 60 fps
+setInterval(sendViewportUpdate, 250); // Increase to 250ms for fewer updates
+

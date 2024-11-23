@@ -42,8 +42,8 @@ canvas.height = window.innerHeight;
 let offsetX = 0;
 let offsetY = 0;
 
-// Zoom level (set to 5%)
-const zoomLevel = 1.0;  // 5% zoom
+// Zoom level (set to 5% zoom)
+const zoomLevel = 1.0; 
 
 // Variables to handle movement
 let moving = { up: false, down: false, left: false, right: false };
@@ -83,6 +83,22 @@ function updatePosition() {
   }
 }
 
+// Send updated viewport to server
+function sendViewportUpdate() {
+  if (playerId && players[playerId]) {
+    const player = players[playerId];
+    socket.emit('updateViewport', {
+      x: player.x,
+      y: player.y,
+      width: canvas.width,
+      height: canvas.height
+    });
+  }
+}
+
+// Update every 100ms to ensure smooth updates as the player moves
+setInterval(sendViewportUpdate, 100);
+
 function gameLoop() {
   // Clear the previous frame and reset the transformation
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -91,23 +107,26 @@ function gameLoop() {
   // Apply zoom transformation
   ctx.scale(zoomLevel, zoomLevel);
 
-  // Calculate the offset based on the player's position to center them
-  const player = players[playerId];
-  const offsetX = canvas.width / 2 - player.x;
-  const offsetY = canvas.height / 2 - player.y;
+  // Only proceed if playerId and players[playerId] are defined
+  if (playerId && players[playerId]) {
+    // Calculate the offset based on the player's position to center them
+    const player = players[playerId];
+    const offsetX = canvas.width / 2 - player.x;
+    const offsetY = canvas.height / 2 - player.y;
 
-  // Move the context to follow the player
-  ctx.translate(offsetX, offsetY);
+    // Move the context to follow the player
+    ctx.translate(offsetX, offsetY);
+  }
 
-  // Draw environment objects
+  // Draw environment objects (only the visible ones received from the server)
   environment.forEach(obj => {
     if (obj.type === 'rock') {
-      ctx.drawImage(rockImage, obj.x, obj.y, obj.size, obj.size); // Use dynamic size
+      ctx.drawImage(rockImage, obj.x, obj.y, obj.size, obj.size);
     } else if (obj.type === 'grass') {
-      ctx.drawImage(grassImage, obj.x, obj.y, obj.size, obj.size); // Use dynamic size
+      ctx.drawImage(grassImage, obj.x, obj.y, obj.size, obj.size);
     } else if (obj.type === 'tree') {
-      const treeImage = treeImages[obj.imageIndex];  // Use assigned tree image
-      ctx.drawImage(treeImage, obj.x, obj.y, obj.size, obj.size); // Use dynamic size
+      const treeImage = treeImages[obj.imageIndex];
+      ctx.drawImage(treeImage, obj.x, obj.y, obj.size, obj.size);
     } else if (obj.type === 'black_rectangle') {
       ctx.drawImage(blackRectangleImage, obj.x, obj.y, obj.width, obj.height);
     }
@@ -122,48 +141,38 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
+// Start the game loop
+requestAnimationFrame(gameLoop);
 
-// Listen for updates from the server
-socket.on('init', (initialPlayers) => {
-  for (const id in initialPlayers) {
-    players[id] = initialPlayers[id];
-  }
+// Handle player initialization
+socket.on('init', (serverPlayers) => {
+  playerId = socket.id;
+  players[playerId] = { x: canvas.width / 2, y: canvas.height / 2 };
+  Object.assign(players, serverPlayers);
 });
 
+// Handle new player joining
 socket.on('newPlayer', (data) => {
   players[data.playerId] = { x: data.x, y: data.y };
 });
 
+// Handle player movement
 socket.on('playerMove', (data) => {
-  players[data.playerId] = { x: data.x, y: data.y };
+  if (players[data.playerId]) {
+    players[data.playerId].x = data.x;
+    players[data.playerId].y = data.y;
+  }
 });
 
-socket.on('removePlayer', (playerId) => {
-  delete players[playerId];
+// Handle player disconnection
+socket.on('removePlayer', (id) => {
+  delete players[id];
 });
 
-// Listen for environment data from the server
-socket.on('environment', (envObjects) => {
-  environment = envObjects;  // Store the environment objects
-  gameLoop(); // Start the game loop
+// Receive and set environment data
+socket.on('environment', (data) => {
+  environment = data;
 });
 
-// Send the screen size to the server
-socket.on('connect', () => {
-  playerId = socket.id; // Set the player's unique ID
-  
-  // Send the screen size to the server for environment generation
-  socket.emit('screenSize', {
-    width: window.innerWidth,
-    height: window.innerHeight
-  });
-});
-
-
-// Capture player movement on the client
-socket.on('connect', () => {
-  playerId = socket.id; // Set the player's unique ID
-});
-
-// Keep updating position at a consistent rate
-setInterval(updatePosition, 1000 / 60); // 60 FPS
+// Update player position
+setInterval(updatePosition, 16); // Roughly 60 fps

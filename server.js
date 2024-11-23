@@ -36,14 +36,14 @@ function generateEnvironment(screenWidth, screenHeight) {
 
     if (rand < 0.3) {
       type = 'rock';
-      size = (Math.random() * 1 + 2) / 100 * screenWidth; // 0.5-1% of screen width
+      size = (Math.random() * 0.25 + 0.5) / 100 * screenWidth; // 0.5-1% of screen width
     } else if (rand < 0.5) {
       type = 'grass';
-      size = (Math.random() * 2 + 3) / 100 * screenWidth; // 0.5-2% of screen width
+      size = (Math.random() * 0.5 + 0.75) / 100 * screenWidth; // 0.5-2% of screen width
     } else {
       type = 'tree';
       imageIndex = Math.floor(Math.random() * treeImages.length); // Assign a random image for trees
-      size = (Math.random() * 12 + 26) / 100 * screenHeight; // 7-11% of screen height
+      size = (Math.random() * 2 + 3.5) / 100 * screenHeight; // 7-11% of screen height
     }
 
     const obj = { type, x, y, size };
@@ -56,6 +56,20 @@ function generateEnvironment(screenWidth, screenHeight) {
     objects.push(obj);
   }
   return objects;
+}
+
+// Generate the initial environment once
+environment = generateEnvironment(GAME_WORLD_WIDTH, GAME_WORLD_HEIGHT);
+
+// Filter objects based on the player’s viewport
+function getVisibleEnvironment(playerX, playerY, viewportWidth, viewportHeight) {
+  const margin = 100; // Add margin for objects just outside the viewport
+  return environment.filter(obj =>
+    obj.x > playerX - viewportWidth / 2 - margin &&
+    obj.x < playerX + viewportWidth / 2 + margin &&
+    obj.y > playerY - viewportHeight / 2 - margin &&
+    obj.y < playerY + viewportHeight / 2 + margin
+  );
 }
 
 io.on('connection', (socket) => {
@@ -78,6 +92,13 @@ io.on('connection', (socket) => {
     io.emit('playerMove', { playerId, x, y });
   });
 
+  // Handle viewport updates from client
+  socket.on('updateViewport', (data) => {
+    const { x, y, width, height } = data;
+    const visibleEnvironment = getVisibleEnvironment(x, y, width, height);
+    socket.emit('environment', visibleEnvironment);
+  });
+
   // Handle disconnection
   socket.on('disconnect', () => {
     console.log(`Player ${playerId} disconnected`);
@@ -85,17 +106,6 @@ io.on('connection', (socket) => {
 
     // Broadcast player removal
     io.emit('removePlayer', playerId);
-  });
-
-  // Handle screen size and environment generation
-  socket.on('screenSize', (sizeData) => {
-    const { width, height } = sizeData;
-    if (environment.length === 0) {
-      environment = generateEnvironment(width, height); // Generate environment if not already done
-    }
-
-    // Send environment to the player
-    socket.emit('environment', environment);
   });
 });
 

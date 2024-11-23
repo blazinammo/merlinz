@@ -100,7 +100,7 @@ window.addEventListener('resize', () => {
 });
 
 // Update every 100ms to ensure smooth updates as the player moves
-setInterval(sendViewportUpdate, 100);
+setInterval(sendViewportUpdate, 60);
 
 function gameLoop() {
   // Clear the previous frame and reset the transformation
@@ -178,5 +178,5 @@ socket.on('environment', (data) => {
 });
 
 // Update player position
-setInterval(updatePosition, 100); // Roughly 60 fps
+setInterval(updatePosition, 60); // Roughly 60 fps
 

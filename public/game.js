@@ -68,10 +68,10 @@ function updatePosition() {
     let newX = players[playerId].x;
     let newY = players[playerId].y;
 
-    if (moving.up) newY -= 5;
-    if (moving.down) newY += 5;
-    if (moving.left) newX -= 5;
-    if (moving.right) newX += 5;
+    if (moving.up) newY -= 10;
+    if (moving.down) newY += 10;
+    if (moving.left) newX -= 10;
+    if (moving.right) newX += 10;
 
     // Update player position
     players[playerId] = { x: newX, y: newY };
@@ -177,4 +177,4 @@ socket.on('environment', (data) => {
 // Update player position
 setInterval(updatePosition, 16); // Roughly 60 fps
 // Update every 100ms to ensure smooth updates as the player moves
-setInterval(sendViewportUpdate, 200);
+setInterval(sendViewportUpdate, 50);

@@ -172,4 +172,4 @@ socket.on('environment', (data) => {
 });
 
 // Update player position
-setInterval(updatePosition, 16); // Roughly 60 fps
+setInterval(updatePosition, 4); // Roughly 60 fps

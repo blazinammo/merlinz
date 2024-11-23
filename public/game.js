@@ -178,6 +178,6 @@ socket.on('environment', (data) => {
 });
 
 // Update player position
-setInterval(updatePosition, 40); // Roughly 60 fps
+setInterval(updatePosition, 100); // Roughly 60 fps
 setInterval(sendViewportUpdate, 400); // Increase to 250ms for fewer updates
 

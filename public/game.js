@@ -77,9 +77,6 @@ function updatePosition() {
     players[playerId] = { x: newX, y: newY };
     socket.emit('move', { x: newX, y: newY });
 
-    // Center the player by adjusting offsets
-    offsetX = newX - canvas.width / 2;
-    offsetY = newY - canvas.height / 2;
   }
 }
 

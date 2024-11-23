@@ -68,10 +68,10 @@ function updatePosition() {
     let newX = players[playerId].x;
     let newY = players[playerId].y;
 
-    if (moving.up) newY -= 10;
-    if (moving.down) newY += 10;
-    if (moving.left) newX -= 10;
-    if (moving.right) newX += 10;
+    if (moving.up) newY -= 6;
+    if (moving.down) newY += 6;
+    if (moving.left) newX -= 6;
+    if (moving.right) newX += 6;
 
     // Update player position
     players[playerId] = { x: newX, y: newY };
@@ -80,16 +80,21 @@ function updatePosition() {
   }
 }
 
-// Send updated viewport to server
+let lastSentX = players[playerId].x;
+let lastSentY = players[playerId].y;
+
 function sendViewportUpdate() {
-  if (playerId && players[playerId]) {
-    const player = players[playerId];
+  const player = players[playerId];
+  // Only send update if the player moved
+  if (Math.abs(player.x - lastSentX) > 5 || Math.abs(player.y - lastSentY) > 5) {
     socket.emit('updateViewport', {
       x: player.x,
       y: player.y,
       width: canvas.width,
       height: canvas.height
     });
+    lastSentX = player.x;
+    lastSentY = player.y;
   }
 }
 

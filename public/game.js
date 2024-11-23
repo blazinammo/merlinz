@@ -43,7 +43,7 @@ let offsetX = 0;
 let offsetY = 0;
 
 // Zoom level (set to 5%)
-const zoomLevel = 0.05;  // 5% zoom
+const zoomLevel = 1.0;  // 5% zoom
 
 // Variables to handle movement
 let moving = { up: false, down: false, left: false, right: false };

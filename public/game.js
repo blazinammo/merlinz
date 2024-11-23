@@ -102,7 +102,7 @@ function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Apply zoom transformation
-  ctx.scale(zoomLevel, zoomLevel);
+  ctx.translate(offsetX * zoomLevel, offsetY * zoomLevel);
 
   // Only proceed if playerId and players[playerId] are defined
   if (playerId && players[playerId]) {
